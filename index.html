@@ -653,7 +653,8 @@
                     </div>
                   </div>
                 </div>
-              </section>
+              </section>   
+                <HammingSimulator />
             </div>
           );
         }
@@ -661,6 +662,127 @@
         // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<ErrorCodesWebsite />);
+
+        function HammingSimulator() {
+  const [dataBits, setDataBits] = useState('');
+  const [encoded, setEncoded] = useState('');
+  const [errorIndex, setErrorIndex] = useState(null);
+  const [decoded, setDecoded] = useState('');
+  const [status, setStatus] = useState('');
+
+  const calculateRedundantBits = (m) => {
+    let r = 0;
+    while (Math.pow(2, r) < m + r + 1) r++;
+    return r;
+  };
+
+  const encode = () => {
+    if (!/^[01]+$/.test(dataBits)) {
+      alert('Please enter only binary digits (0 or 1)');
+      return;
+    }
+
+    const m = dataBits.length;
+    const r = calculateRedundantBits(m);
+    const totalBits = m + r;
+    const code = new Array(totalBits + 1).fill(0);
+    let j = 0;
+
+    // Insert data bits in non-parity positions
+    for (let i = 1; i <= totalBits; i++) {
+      if ((i & (i - 1)) !== 0) code[i] = parseInt(dataBits[j++]);
+    }
+
+    // Calculate parity bits
+    for (let i = 0; i < r; i++) {
+      let parityPos = Math.pow(2, i);
+      let parity = 0;
+      for (let j = 1; j <= totalBits; j++) {
+        if (j & parityPos) parity ^= code[j];
+      }
+      code[parityPos] = parity;
+    }
+
+    setEncoded(code.slice(1).join(''));
+    setDecoded('');
+    setStatus(`Encoded with ${r} parity bits`);
+    setErrorIndex(null);
+  };
+
+  const introduceError = () => {
+    if (!encoded) return;
+    const index = Math.floor(Math.random() * encoded.length);
+    const arr = encoded.split('');
+    arr[index] = arr[index] === '0' ? '1' : '0';
+    setEncoded(arr.join(''));
+    setErrorIndex(index + 1);
+    setStatus(`Error introduced at bit ${index + 1}`);
+  };
+
+  const decode = () => {
+    const bits = encoded.split('').map(Number);
+    const totalBits = bits.length;
+    const r = Math.ceil(Math.log2(totalBits + 1));
+    let errorPos = 0;
+
+    for (let i = 0; i < r; i++) {
+      let parityPos = Math.pow(2, i);
+      let parity = 0;
+      for (let j = 1; j <= totalBits; j++) {
+        if (j & parityPos) parity ^= bits[j - 1];
+      }
+      if (parity) errorPos += parityPos;
+    }
+
+    if (errorPos !== 0) {
+      bits[errorPos - 1] ^= 1;
+      setStatus(`Error detected and corrected at bit ${errorPos}`);
+    } else {
+      setStatus('No error detected');
+    }
+
+    const data = bits.filter((_, i) => ((i + 1) & (i)) !== 0).join('');
+    setDecoded(data);
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-8 mt-8">
+      <h2 className="text-3xl font-bold text-gray-800 mb-4">🎯 Hamming Code Simulator</h2>
+
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <input
+          className="border p-2 rounded-md flex-grow"
+          placeholder="Enter data bits (e.g. 1011)"
+          value={dataBits}
+          onChange={(e) => setDataBits(e.target.value)}
+        />
+        <button onClick={encode} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Encode</button>
+      </div>
+
+      {encoded && (
+        <div className="space-y-4">
+          <p><strong>Encoded Bits:</strong> <span className="font-mono bg-blue-50 px-2 py-1 rounded">{encoded}</span></p>
+          {errorIndex && <p className="text-red-600">Error at bit: {errorIndex}</p>}
+          <div className="flex gap-4">
+            <button onClick={introduceError} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Introduce Error</button>
+            <button onClick={decode} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Decode</button>
+          </div>
+          {decoded && (
+            <div className="mt-4 bg-green-50 border-2 border-green-500 p-4 rounded-lg">
+              <p className="text-green-800 font-semibold">Decoded Data: <span className="font-mono text-xl">{decoded}</span></p>
+            </div>
+          )}
+          <p className="text-sm text-gray-600 mt-2 italic">{status}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
     </script>
+
+
+
+
 </body>
 </html>
