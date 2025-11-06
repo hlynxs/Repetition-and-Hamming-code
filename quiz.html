@@ -190,6 +190,7 @@
         ];
 
         function Quiz() {
+          const [mode, setMode] = useState(null); // 'quiz' or 'flashcard'
           const [currentQuestion, setCurrentQuestion] = useState(0);
           const [selectedAnswer, setSelectedAnswer] = useState(null);
           const [score, setScore] = useState(0);
@@ -223,6 +224,7 @@
           };
 
           const restartQuiz = () => {
+            setMode(null);
             setCurrentQuestion(0);
             setSelectedAnswer(null);
             setScore(0);
@@ -265,7 +267,119 @@
 
               {/* Main Content */}
               <main className="container mx-auto px-6 py-12">
-                {!showResult ? (
+                {!mode ? (
+                  /* Mode Selection Screen */
+                  <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-lg shadow-2xl p-8 mb-8 text-center">
+                      <h2 className="text-3xl font-bold text-gray-800 mb-4">Choose Your Study Mode</h2>
+                      <p className="text-gray-600 mb-8">Select how you want to review the material</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* Quiz Mode */}
+                      <button
+                        onClick={() => setMode('quiz')}
+                        className="bg-white rounded-lg shadow-xl p-8 hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-transparent hover:border-purple-500"
+                      >
+                        <div className="text-6xl mb-4">📝</div>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-3">Interactive Quiz</h3>
+                        <p className="text-gray-600 mb-4">Answer questions one by one and get your score at the end</p>
+                        <ul className="text-left text-sm text-gray-700 space-y-2">
+                          <li>✓ 20 Multiple Choice Questions</li>
+                          <li>✓ Instant Scoring</li>
+                          <li>✓ Answer Review</li>
+                          <li>✓ Track Your Progress</li>
+                        </ul>
+                      </button>
+
+                      {/* Flashcard Mode */}
+                      <button
+                        onClick={() => setMode('flashcard')}
+                        className="bg-white rounded-lg shadow-xl p-8 hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-transparent hover:border-cyan-500"
+                      >
+                        <div className="text-6xl mb-4">📚</div>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-3">Study Guide</h3>
+                        <p className="text-gray-600 mb-4">View all questions with answers for quick review</p>
+                        <ul className="text-left text-sm text-gray-700 space-y-2">
+                          <li>✓ All 20 Questions Displayed</li>
+                          <li>✓ Answer Key Included</li>
+                          <li>✓ Perfect for Studying</li>
+                          <li>✓ Print-Friendly Format</li>
+                        </ul>
+                      </button>
+                    </div>
+                  </div>
+                ) : mode === 'flashcard' ? (
+                  /* Flashcard/Study Guide Mode */
+                  <div className="bg-white rounded-lg shadow-2xl p-8 max-w-5xl mx-auto">
+                    <div className="flex justify-between items-center mb-8">
+                      <h2 className="text-3xl font-bold text-gray-800">📚 Study Guide - Answer Key</h2>
+                      <button
+                        onClick={() => setMode(null)}
+                        className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      >
+                        ← Back
+                      </button>
+                    </div>
+
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                      <p className="text-blue-800">
+                        <strong>Study Tip:</strong> Review all questions and answers below. Use this as a reference guide before taking the interactive quiz!
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      {quizQuestions.map((q, idx) => (
+                        <div key={q.id} className="border-2 border-gray-200 rounded-lg p-6 hover:border-purple-300 transition-colors">
+                          <div className="flex items-start mb-4">
+                            <span className="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold mr-3">
+                              {idx + 1}
+                            </span>
+                            <h3 className="text-lg font-semibold text-gray-800 flex-grow">{q.question}</h3>
+                          </div>
+                          
+                          <div className="ml-11 space-y-2">
+                            {q.options.map((option, optIdx) => (
+                              <div
+                                key={optIdx}
+                                className={`p-3 rounded-lg ${
+                                  optIdx === q.correct
+                                    ? 'bg-green-100 border-2 border-green-500'
+                                    : 'bg-gray-50 border border-gray-200'
+                                }`}
+                              >
+                                <span className="font-semibold text-gray-700">
+                                  {String.fromCharCode(65 + optIdx)}.
+                                </span>{' '}
+                                <span className={optIdx === q.correct ? 'text-green-800 font-semibold' : 'text-gray-700'}>
+                                  {option}
+                                </span>
+                                {optIdx === q.correct && (
+                                  <span className="ml-2 text-green-600">✓ Correct Answer</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-8 flex gap-4">
+                      <button
+                        onClick={() => setMode('quiz')}
+                        className="flex-1 py-4 rounded-lg font-bold text-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all duration-300"
+                      >
+                        📝 Take the Quiz Now
+                      </button>
+                      <button
+                        onClick={() => window.print()}
+                        className="flex-1 py-4 rounded-lg font-bold text-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 shadow-lg transition-all duration-300"
+                      >
+                        🖨️ Print Study Guide
+                      </button>
+                    </div>
+                  </div>
+                ) : !showResult ? (
                   <div className="bg-white rounded-lg shadow-2xl p-8 max-w-3xl mx-auto">
                     {/* Progress Bar */}
                     <div className="mb-8">
